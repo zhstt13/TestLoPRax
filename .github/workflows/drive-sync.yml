@@ -6,6 +6,9 @@ on:
 jobs:
   sync-drive:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,11 +18,27 @@ jobs:
           mkdir -p imported/images
           mkdir -p imported/pdf
 
-      - name: Google Drive sync placeholder
+      - name: Setup Google credentials
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: |
-          echo "Drive sync runtime prepared"
-          echo "Next step: connect Google Drive API credentials"
+          echo "$GOOGLE_CREDENTIALS" > google-credentials.json
 
-      - name: Show structure
+      - name: Install dependencies
         run: |
-          find imported -maxdepth 2 -type d
+          python -m pip install --upgrade pip
+          pip install google-api-python-client google-auth
+
+      - name: Run Drive sync
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: google-credentials.json
+        run: |
+          python scripts/drive_sync.py
+
+      - name: Commit imported files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add imported/
+          git commit -m "Import files from Google Drive" || echo "No changes"
+          git push
