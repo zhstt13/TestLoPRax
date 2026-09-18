@@ -34,6 +34,7 @@ jobs:
 
       - name: Run Drive sync
         env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
           GOOGLE_APPLICATION_CREDENTIALS: google-credentials.json
         run: |
           python scripts/drive_sync.py
