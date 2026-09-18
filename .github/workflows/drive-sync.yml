@@ -1,6 +1,9 @@
 name: Google Drive Sync Test
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
