@@ -23,8 +23,10 @@ SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
 
 def get_drive_service():
+    print("Loading Google credentials...")
     credentials_json = os.environ["GOOGLE_CREDENTIALS"]
     info = json.loads(credentials_json)
+    print("Credential loaded. Service account:", info.get("client_email"))
     credentials = service_account.Credentials.from_service_account_info(
         info, scopes=SCOPES
     )
@@ -32,17 +34,20 @@ def get_drive_service():
 
 
 def find_file(service, name):
+    print("Searching Drive file:", name)
     result = service.files().list(
         q=f"name='{name}' and trashed=false",
         fields="files(id,name)"
     ).execute()
     files = result.get("files", [])
+    print("Found:", files)
     if not files:
         raise FileNotFoundError(name)
     return files[0]["id"]
 
 
 def download_file(service, file_id, output):
+    print("Downloading:", file_id)
     request = service.files().get_media(fileId=file_id)
     Path(output).parent.mkdir(parents=True, exist_ok=True)
 
@@ -54,6 +59,7 @@ def download_file(service, file_id, output):
 
 
 def main():
+    print("Starting Drive sync")
     service = get_drive_service()
     for name, output in FILES.items():
         file_id = find_file(service, name)
