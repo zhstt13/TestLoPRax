@@ -3,11 +3,13 @@ Google Drive -> GitHub Runtime sync helper.
 
 Downloads selected files from Google Drive using a Service Account
 credential provided through GOOGLE_CREDENTIALS and stores them in imported/.
+Also generates an import manifest for later processing pipelines.
 """
 
 import io
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from google.oauth2 import service_account
@@ -58,13 +60,32 @@ def download_file(service, file_id, output):
             _, done = downloader.next_chunk()
 
 
+def write_manifest(items):
+    Path("imported").mkdir(exist_ok=True)
+    manifest = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source": "Google Drive",
+        "items": items,
+    }
+    Path("imported/manifest.json").write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False),
+        encoding="utf-8"
+    )
+
+
 def main():
     print("Starting Drive sync")
     service = get_drive_service()
+    imported = []
+
     for name, output in FILES.items():
         file_id = find_file(service, name)
         download_file(service, file_id, output)
+        imported.append({"name": name, "path": output, "drive_id": file_id})
         print(f"Synced: {name} -> {output}")
+
+    write_manifest(imported)
+    print("Manifest generated")
 
 
 if __name__ == "__main__":
