@@ -1,0 +1,25 @@
+name: Google Drive Sync Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-drive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare runtime folders
+        run: |
+          mkdir -p imported/images
+          mkdir -p imported/pdf
+
+      - name: Google Drive sync placeholder
+        run: |
+          echo "Drive sync runtime prepared"
+          echo "Next step: connect Google Drive API credentials"
+
+      - name: Show structure
+        run: |
+          find imported -maxdepth 2 -type d
